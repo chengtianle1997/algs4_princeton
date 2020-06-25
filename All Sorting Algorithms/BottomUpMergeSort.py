@@ -11,7 +11,6 @@ def BottomUpMergeSort(alist):
         
         
 def Merge(alist, lo, mid, hi):
-    n = hi - lo + 1
     i, j, k = lo, mid + 1, lo
     # Copy valid part only to save time and space
     blist = alist[lo:hi+1]
