@@ -83,7 +83,7 @@ def SortTest(alist):
     return blist
 
 if __name__ == '__main__':
-    alist = GenerateRandArray(50, 0, 10000)
+    alist = GenerateRandArray(30000, 0, 10000)
     blist = SortTest(alist)
     if isSorted(blist):
         print("The arr list is sorted!")
