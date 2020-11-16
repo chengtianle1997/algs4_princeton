@@ -14,6 +14,7 @@ class Node:
         self.left = None
         self.right = None
         self.color = BLACK
+        self.count = 1
 
 def isRed(node):
     if node == None:
@@ -31,7 +32,15 @@ def compare(KeyA, KeyB):
 class LLRBTree:
     def __init__(self):
         self.root = None
+        self.node_list = []
 
+    def size(self, x=0):
+        if x == 0:
+            return self.size(self.root)
+        if x == None:
+            return 0
+        return x.count
+        
     def rotateLeft(self, h):
         x = h.right
         h.right = x.left
@@ -82,6 +91,8 @@ class LLRBTree:
         elif cmp == 0:
             # update the value
             x.val = val
+        
+        x.count = 1 + self.size(x.left) + self.size(x.right)
         
         # Red-Black Operations
         if isRed(x.right) and not isRed(x.left):
@@ -145,7 +156,7 @@ class LLRBTree:
             else:
                 return x
     
-    # Find the Min key <= K
+    # Find the Min key >= K
     def ceil(self, K):
         x = self.ceil_p(self.root, K)
         if x == None:
@@ -155,7 +166,72 @@ class LLRBTree:
     def ceil_p(self, x, K):
         if x == None:
             return None
-            
+        cmp = compare(K, x.key)
+        # Case 1: K == x.key
+        if cmp == 0:
+            return x
+        # Case 2: K > x.key
+        # x.key is still too small, try to find a bigger one
+        elif cmp > 0:
+            return self.ceil_p(x.right, K)
+        # Case 3: K < x.key
+        # x.key is already bigger than K, try to find a smaller one
+        # that is still smaller but more closer to K
+        elif cmp < 0:
+            # Try to find a smaller one
+            t = self.ceil_p(x.left, K)
+            # if found
+            if not t == None:
+                return t
+            # if not found
+            else:
+                return x
+
+    # Print the Red Black Tree in ascending sequence
+    def printTreeSeq(self):
+        self.node_list = []
+        self.printTreeSeq_p(self.root)
+        return self.node_list
+
+    def printTreeSeq_p(self, root):
+        if root == None:
+            return
+        self.printTreeSeq_p(root.left)
+        self.node_list.append(root.key)
+        self.printTreeSeq_p(root.right)
+    
+    # Delete MinNode
+    def deleteMin(self):
+        if self.root == None:
+            return
+        self.root = self.deleteMin_p(self.root)
+    
+    # Go left until finding a node with no left node
+    # Replace that node with its right link
+    # Update subtree counts
+    def deleteMin_p(self, x):
+        if x.left == None:
+            return x.right
+        x.left = self.deleteMin_p(x.left)
+        x.count = 1 + self.size(x.left) + self.size(x.right)
+        return x
+    
+    # Delete MaxNode
+    def deleteMax(self):
+        if self.root == None:
+            return
+        self.root = self.deleteMax_p(self.root)
+    
+    # Go right until finding a node with no right node
+    # Replace that node with its left link
+    # Update subtree counts
+    def deleteMax_p(self, x):
+        if x.right == None:
+            return x.left
+        x.right = self.deleteMax_p(x.right)
+        x.count = 1 + self.size(x.left) + self.size(x.right)
+        return x
+    
 
 # Test Demo
 key = ['S', 'E', 'A', 'R', 'C', 'H', 'T', 'R', 'E', 'E']
@@ -170,4 +246,22 @@ for i in range(len(key)):
     print("key:{}, value:{}".format(key[i], llrb.get(key[i])))
 # min & max
 print("Min:{}, Max:{}".format(llrb.min(), llrb.max()))
-        
+# floor & ceiling
+test_floor = 'B'
+print("Floor({}) = {}".format(test_floor, llrb.floor(test_floor)))
+test_ceil = 'D'
+print("Ceil({}) = {}".format(test_ceil, llrb.ceil(test_ceil)))
+# delete min
+print("Delete Min:")
+print("->Before: size = {}".format(llrb.size()), end=" ")
+print(llrb.printTreeSeq())
+llrb.deleteMin()
+print("->After: size = {}".format(llrb.size()), end=" ")
+print(llrb.printTreeSeq())
+# delete max
+print("Delete Max:")
+print("->Before: size = {}".format(llrb.size()), end=" ")
+print(llrb.printTreeSeq())
+llrb.deleteMax()
+print("->After: size = {}".format(llrb.size()), end=" ")
+print(llrb.printTreeSeq())
