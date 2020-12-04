@@ -300,6 +300,89 @@ class DirectedCycle_multi:
                 self.cycle.append(cycle_w.stack)
         self.onStack[v] = False
 
+# Depth-First Order
+class DepthFirstOrder:
+    def __init__(self, graph):
+        self.graph = graph
+        self.marked = {}
+        self.reversePost = Stack()
+        for v in self.graph.adj.keys():
+            self.marked[v] = False
+        for v in self.graph.adj.keys():
+            if not self.marked[v]:
+                self.dfs(v)
+    
+    def dfs(self, v):
+        self.marked[v] = True
+        for w in self.graph.FromV(v):
+            if not self.marked[w]:
+                self.dfs(w)
+        self.reversePost.push(v)
+
+    # Return all vertices in "reverse DFS postorder" or "topological order"
+    # Reverse DFS postorder of a DAG (Directed acyclic graph) is a topological order
+    def reversePostOrder(self):
+        reverse_list = []
+        while not self.reversePost.isEmpty():
+            reverse_list.append(self.reversePost.pop())
+        return reverse_list
+
+# Topological Sort
+class Topological:
+    def __init__(self, graph):
+        self.graph = graph
+        self.order = None
+        cycle_finder = DirectedCycle(graph)
+        if not cycle_finder.hasCycle():
+            dfs_opr = DepthFirstOrder(graph)
+            self.order = dfs_opr.reversePostOrder()
+    
+    # Return the Topological order
+    def topoOrder(self):
+        return self.order
+    
+    # Whether the graph is a Directed Acyclic Graph (DAG)
+    def isDAG(self):
+        return not self.order == None
+    
+# KosarajuSharirSCC
+# Strong Connected: if there is both a directed path from v to w and from w to v
+# Strong Component: a maximal subset of strongly-connected vertices
+class StrongComponent:
+    def __init__(self, graph):
+        self.graph = graph
+        self.component_list = {}
+        self.id = {}
+        self.count = 1
+        self.marked = {}
+        for v in graph.adj.keys():
+            self.marked[v] = False
+            self.id[v] = None
+        # Step 1: Find the reverse post order of G.R (DFS only)
+        dfs_opre = DepthFirstOrder(graph.reverse())
+        dfs_reverse_post = dfs_opre.reversePostOrder()
+        # Step 2: Do DFS or BFS for G      
+        for v in dfs_reverse_post:
+            if not self.marked[v]:
+                self.component_list[self.count] = []
+                self.dfs(v)
+                self.count += 1
+    
+    def dfs(self, v):
+        self.marked[v] = True
+        self.id[v] = self.count
+        self.component_list[self.count].append(v)
+        for w in self.graph.FromV(v):
+            if not self.marked[w]:
+                self.dfs(w)
+    
+    # Is v and w strong connected
+    def strongConnected(self, v, w):
+        return self.id[v] == self.id[w]
+
+    # Print all strong components
+    def allStrongComponents(self):
+        return self.component_list
 
 
 # Test Demo
@@ -309,24 +392,48 @@ g.FromFile(f)
 print("The whole graph adjacent list:")
 g.printAllAdj()
 print("Vertices adjacent to vertice \"6\": " + str(g.FromV('6')))
+print('\n')
 
 # Reverse
 gr = g.reverse()
 print("The whole reverse graph adjacent list:")
 gr.printAllAdj()
+print('\n')
 
 # Path Searching (DFS)
 path = Path(g, '0')
 print("Path from 0 to 2: " + str(path.pathTo('2')))
 print("Path from 0 to 7: " + str(path.pathTo('7')))
+print('\n')
 
 # Path Searching (BFS)
 path = Path_b(g, '0')
 print("Path from 0 to 2: " + str(path.pathTo('2')))
 print("Path from 0 to 7: " + str(path.pathTo('7')))
+print('\n')
 
 # Find a directed circle
 d_cycle = DirectedCycle(g)
 print("One cycle in the graph:" + str(d_cycle.CycleIter()))
 d_cycle_multi = DirectedCycle_multi(g)
 print("Multi cycle searching: " + str(d_cycle_multi.CycleIter()))
+print('\n')
+
+# Topological sort
+f_t = open("topoSort.txt", "r", encoding="utf-8")
+g_t = DiGraph()
+g_t.FromFile(f_t)
+print("The whole graph adjacent list:")
+g_t.printAllAdj()
+tp_t = Topological(g_t)
+print("Topological Sort Result for topoSort.txt: " + str(tp_t.topoOrder()))
+print("Is topoSort.txt a DAG: " + str(tp_t.isDAG()))
+tp = Topological(g)
+print("Topological Sort Result for tinyDG.txt: " + str(tp.topoOrder()))
+print("Is tinyDG.txt a DAG: " + str(tp.isDAG()))
+print('\n')
+
+# Strong Components
+strong_comp = StrongComponent(g)
+print("All Strong Component:" + str(strong_comp.allStrongComponents()))
+print('\n')
