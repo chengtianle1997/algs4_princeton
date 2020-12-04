@@ -147,6 +147,159 @@ class Path:
                 self.dfs(w)
                 self.edgeTo[w] = v
     
+# Path searching algorithms (BFS)
+class Path_b:
+    # Find paths in graph
+    def __init__(self, graph, s):
+        self.graph = graph
+        self.s = s
+        self.marked = {}
+        self.edgeTo = {}
+        self.distTo = {}
+        for v in self.graph.adj.keys():
+            self.marked[v] = False
+            self.edgeTo[v] = None
+            self.distTo[v] = None
+        self.BreadthFirstPaths()
+    
+    # Is there a path from s to v
+    def hasPathTo(self, v):
+        return self.marked[v]
+
+    # Path from s to v, return NOne if no such path exists
+    def pathTo(self, v):
+        if not self.hasPathTo(v):
+            return None
+        path = Stack()
+        x = v
+        while not x == self.s:
+            path.push(x)
+            x = self.edgeTo[x]
+        path.push(self.s)
+        # Reverse the path by pop opt
+        path_ret = []
+        while not path.isEmpty():
+            path_ret.append(path.pop())
+        return path_ret
+    
+    # Breadth First Search
+    def BreadthFirstPaths(self):
+        self.bfs(self.s)
+    
+    def bfs(self, s):
+        q = Queue()
+        dist_q = Queue()
+        q.enqueue(s)
+        dist_q.enqueue(0)
+        self.marked[s] = True
+        while not q.isEmpty():
+            v = q.dequeue()
+            v_dist = dist_q.dequeue()
+            for w in self.graph.FromV(v):
+                if not self.marked[w]:
+                    q.enqueue(w)
+                    dist_q.enqueue(v_dist + 1)
+                    self.marked[w] = True
+                    self.edgeTo[w] = v
+                    self.distTo[w] = v_dist + 1
+
+# Finding a directed cycle -- find only one cycle
+class DirectedCycle:
+    def __init__(self, graph):
+        self.graph = graph
+        self.marked = {}
+        self.edgeTo = {}
+        self.cycle = Stack()
+        self.onStack = {}
+        for v in graph.adj.keys():
+            self.marked[v] = False
+            self.edgeTo[v] = None
+            self.onStack[v] = False
+        # Search the cycle
+        for v in self.graph.adj.keys():
+            if not self.marked[v]:
+                self.dfs(v)
+        
+    # Is there a directed cycle in the graph
+    def hasCycle(self):
+        return not self.cycle.isEmpty()
+    
+    # Return vertices on a cycle
+    def CycleIter(self):
+        if not self.hasCycle():
+            return None
+        return self.cycle.stack
+        
+    def dfs(self, v):
+        self.onStack[v] = True
+        self.marked[v] = True
+        for w in self.graph.FromV(v):
+            # if cycle has already been found
+            if self.hasCycle():
+                return
+            # if w is not marked
+            elif not self.marked[w]:
+                self.edgeTo[w] = v
+                self.dfs(w)
+            # if there are path: v->w and w->v
+            elif self.onStack[w]:
+                self.cycle = Stack()
+                x = v
+                while not x == w:
+                    self.cycle.push(x)
+                    x = self.edgeTo[x]
+                self.cycle.push(w)
+                self.cycle.push(v)
+        self.onStack[v] = False
+
+
+# Finding a directed cycle -- Multi cycle searching (incompleted)
+class DirectedCycle_multi:
+    def __init__(self, graph):
+        self.graph = graph
+        self.marked = {}
+        self.edgeTo = {}
+        self.cycle = []
+        self.onStack = {}
+        for v in graph.adj.keys():
+            self.marked[v] = False
+            self.edgeTo[v] = None
+            self.onStack[v] = False
+        # Search the cycle
+        for v in self.graph.adj.keys():
+            if not self.marked[v]:
+                self.dfs(v)
+        
+    # Is there a directed cycle in the graph
+    def hasCycle(self):
+        return len(self.cycle) > 0
+    
+    # Return vertices on a cycle
+    def CycleIter(self):
+        if not self.hasCycle():
+            return None
+        return self.cycle
+        
+    def dfs(self, v):
+        self.onStack[v] = True
+        self.marked[v] = True
+        for w in self.graph.FromV(v):
+            # if w is not marked
+            if not self.marked[w]:
+                self.edgeTo[w] = v
+                self.dfs(w)
+            # if there are path: v->w and w->v
+            elif self.onStack[w]:
+                cycle_w = Stack()
+                x = v
+                while not x == w:
+                    cycle_w.push(x)
+                    x = self.edgeTo[x]
+                cycle_w.push(w)
+                cycle_w.push(v)
+                self.cycle.append(cycle_w.stack)
+        self.onStack[v] = False
+
 
 
 # Test Demo
@@ -157,7 +310,7 @@ print("The whole graph adjacent list:")
 g.printAllAdj()
 print("Vertices adjacent to vertice \"6\": " + str(g.FromV('6')))
 
-# Reverse test
+# Reverse
 gr = g.reverse()
 print("The whole reverse graph adjacent list:")
 gr.printAllAdj()
@@ -166,3 +319,14 @@ gr.printAllAdj()
 path = Path(g, '0')
 print("Path from 0 to 2: " + str(path.pathTo('2')))
 print("Path from 0 to 7: " + str(path.pathTo('7')))
+
+# Path Searching (BFS)
+path = Path_b(g, '0')
+print("Path from 0 to 2: " + str(path.pathTo('2')))
+print("Path from 0 to 7: " + str(path.pathTo('7')))
+
+# Find a directed circle
+d_cycle = DirectedCycle(g)
+print("One cycle in the graph:" + str(d_cycle.CycleIter()))
+d_cycle_multi = DirectedCycle_multi(g)
+print("Multi cycle searching: " + str(d_cycle_multi.CycleIter()))
