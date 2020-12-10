@@ -7,7 +7,7 @@ class MinPQ:
         self.N = 0
     
     def isEmpty(self):
-        return self.size == 0
+        return self.N == 0
     
     def insert(self, key):
         # Insert a key to the end
