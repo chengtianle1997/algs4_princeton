@@ -1,6 +1,7 @@
 import os
-import MinPQ.MinPQ as MinPQ
-import UnionFind.UnionFind as UnionFind
+import MinPQ
+import UnionFind
+import Queue
 
 # Weighted edge api
 class Edge:
@@ -82,11 +83,98 @@ class EdgeWeightedGraph:
             for e in self.adj[v]:
                 edge_list.append([e.v, e.w, e.weight])
             print("{}:{}".format(v, edge_list))
+    
+    # Return all the edges
+    def Edges(self):
+        edge_list = []
+        for v in self.adj.keys():
+            for e in self.adj[v]:
+                edge_list.append(e)
+        return edge_list
+    
+    # Return all the vertices
+    def Vertices(self):
+        return list(self.adj.keys())
 
 # Kruskal MST
 class KruskalMST:
     def __init__(self, graph):
         self.graph = graph
+        # MST queue
+        self.mst = Queue.Queue()
+        # Build priority queue
+        pq = MinPQ.MinPQ()
+        for e in graph.Edges():
+            pq.insert(e)
+        # Build union find to find cycle 
+        # (instead of dfs: log*V(faster) for union-find and V(slower) for dfs)
+        uf = UnionFind.UnionFind(graph.Vertices())
+        # Cycle when pq is not empty and MST does not have enough nodes
+        while not pq.isEmpty() and self.mst.size() < graph.V - 1:
+            e = pq.delMin()
+            v = e.either()
+            w = e.other(v)
+            # Ensure that edge v-w does not create cycle
+            if not uf.connected(v, w):
+                uf.union(v, w)
+                self.mst.enqueue(e)
+    
+    # Return all the edges in MST
+    def Edges(self):
+        return self.mst.queue
+
+    # Return the weigt
+    def Weight(self):
+        weight_sum = 0
+        for e in self.mst.queue:
+            weight_sum += e.weight
+        return weight_sum
+
+# Prim's MST (lazy implement)
+class LazyPrimMST:
+    def __init__(self, graph):
+        self.graph = graph
+        self.marked = {}
+        self.mst = Queue.Queue()
+        self.pq = MinPQ.MinPQ()
+        for v in graph.Vertices():
+            self.marked[v] = False
+        # Visit the first vertice
+        V = self.graph.Vertices()
+        self.visit(V[0])
+        # Cycle until pq is empty or MST have enough nodes
+        while not self.pq.isEmpty() and self.mst.size() < self.graph.V - 1:
+            e = self.pq.delMin()
+            v = e.either()
+            w = e.other(v)
+            if self.marked[v] and self.marked[w]:
+                continue
+            self.mst.enqueue(e)
+            if not self.marked[v]:
+                self.visit(v)
+            if not self.marked[w]:
+                self.visit(w)
+
+    # Return all the edges in MST
+    def Edges(self):
+        return self.mst.queue
+    
+    # Return weight
+    def Weight(self):
+        weight_sum = 0
+        for e in self.mst.queue:
+            weight_sum += e.weight
+        return weight_sum
+
+    # Visit v in the edge-weighted graph
+    def visit(self, v):
+        self.marked[v] = True
+        for e in self.graph.adjTo(v):
+            if not self.marked[e.other(v)]:
+                self.pq.insert(e)
+
+    
+
 
 
 def printAdjList(adj_list):
@@ -103,4 +191,19 @@ print("The whole graph adjacent list:")
 ewg.printAllAdj()
 print("Vertices adjacent to vertice \"6\": " + str(printAdjList(ewg.adjTo('6'))))
 print('\n')
+
+# Kruskal MST
+print("--- Kruskal Minimum Spanning Tree ---")
+kruskal_mst = KruskalMST(ewg)
+print(printAdjList(kruskal_mst.Edges()))
+print("Weight Sum: " + str(kruskal_mst.Weight()))
+print('\n')
+
+# Prim's MST (lazy implement)
+print("--- Prim's Minimum Spanning Tree (Lazy implement) ---")
+lazy_prim_mst = LazyPrimMST(ewg)
+print(printAdjList(lazy_prim_mst.Edges()))
+print("Weight Sum: " + str(lazy_prim_mst.Weight()))
+print('\n')
+
 

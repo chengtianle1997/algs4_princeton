@@ -24,7 +24,8 @@ class MinPQ:
         # Exchange the root with the end
         self.exch(1, self.N)
         # Delete the end
-        self.key[self.N] = None
+        # self.key[self.N] = None
+        self.key.pop(self.N)
         self.N -= 1
         # Sink to keep the order of heap
         self.sink(1)
