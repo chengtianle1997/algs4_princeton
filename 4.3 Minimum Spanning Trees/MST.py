@@ -173,7 +173,18 @@ class LazyPrimMST:
             if not self.marked[e.other(v)]:
                 self.pq.insert(e)
 
-    
+# Prim's MST (eager version)
+class PrimMST:
+    def __init__(self):
+        # Shortest edge from tree vertex
+        self.edgeTo = {}
+        # distTo[w] = edgeTo[w].weight
+        self.distTo = {}
+        # true if v is on tree
+        self.marked = {}
+        # eligible crossing edges
+
+
 
 
 
