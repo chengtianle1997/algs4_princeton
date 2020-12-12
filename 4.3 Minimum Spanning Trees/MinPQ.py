@@ -38,7 +38,7 @@ class MinPQ:
 
     def sink(self, k):
         # Remember to include the equal condition
-        while(2 * k <= self.N):
+        while 2 * k <= self.N:
             # Find the less child
             j = 2 * k
             if j < self.N and self.more(j, j + 1):
