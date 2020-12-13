@@ -3,6 +3,8 @@
 # and change the key by specifying the index
 class IndexMinPQ:
     def __init__(self):
+        # node[i] to save extra info for keys[i]
+        self.node = []
         # keys[i] is the priority of index i
         self.keys = []
         # pq[i] is the index of the key in heap position i
@@ -17,30 +19,57 @@ class IndexMinPQ:
         return self.N == 0
     
     # Insert a key to the end
-    def insert(self, key):
+    def insert(self, node, key):
         self.N += 1
+        self.node.append(node)
         self.keys.append(key)
-        self.pq.append(self.N - 1)
+        self.pq.append(len(self.node) - 1)
         self.qp.append(self.N)
+        self.swim(self.N)
 
     # Delete the minimum
     def delMin(self):
         # Get the minKey
+        minNode = self.node[self.pq[1]]
         minKey = self.keys[self.pq[1]]
         # Exchange the root with the end
         self.exch(1, self.N)
+        # Exchange the key, node and qp to the end
+        # self.node[self.pq[self.N]], self.node[len(self.node) - 1] = \
+        #     self.node[len(self.node) - 1], self.node[self.pq[self.N]]
+        # self.keys[self.pq[self.N]], self.keys[len(self.keys) - 1] = \
+        #     self.keys[len(self.keys) - 1], self.keys[self.pq[self.N]]
+        # self.qp[self.pq[self.N]], self.qp[len(self.qp) - 1] = \
+        #     self.qp[len(self.qp) - 1], self.qp[self.pq[self.N]]
         # Delete the end
-        self.keys.pop(self.pq[self.N])
-        self.qp.pop(self.pq[self.N])
+        # self.node.pop(self.N - 1)
+        # self.keys.pop(self.N - 1)
+        # self.qp.pop(self.N - 1)
+        
+        # delete operation: set qp as None and maintain key and node 
+        # at the same position, check whether qp is None to ensure that
+        # the key and node has been deleted or not
+        self.qp[self.pq[self.N]] = None
         self.pq.pop(self.N)
+        self.N -= 1
         # Sink to keep the order of heap
         self.sink(1)
-        return minKey
+        return minNode, minKey
     
     # Decrease the key of index i
     def decreaseKey(self, i, key):
         self.keys[i] = key
         self.swim(self.qp[i])
+
+    # Whether contains node or not
+    def contains(self, node):
+        for i in range(len(self.node)):
+            if node == self.node[i]:
+                if not self.qp[i] == None:
+                    return i
+                else:
+                    return False
+        return False
 
     def swim(self, k):
         while k > 1 and self.more(int(k / 2), k):

@@ -2,6 +2,7 @@ import os
 import MinPQ
 import UnionFind
 import Queue
+import IndexMinPQ
 
 # Weighted edge api
 class Edge:
@@ -175,7 +176,8 @@ class LazyPrimMST:
 
 # Prim's MST (eager version)
 class PrimMST:
-    def __init__(self):
+    def __init__(self, graph):
+        self.graph = graph
         # Shortest edge from tree vertex
         self.edgeTo = {}
         # distTo[w] = edgeTo[w].weight
@@ -183,10 +185,51 @@ class PrimMST:
         # true if v is on tree
         self.marked = {}
         # eligible crossing edges
-        
-
-
-
+        self.pq = IndexMinPQ.IndexMinPQ()
+        # set all distTo to infinity
+        for v in self.graph.Vertices():
+            self.marked[v] = False
+            self.distTo[v] = float('inf')
+        # insert pq with first vertice and weight 0
+        self.distTo[self.graph.Vertices()[0]] = 0
+        self.pq.insert(self.graph.Vertices()[0], 0)
+        # cycle to visit vertices in pq
+        while not self.pq.isEmpty():
+            node, key = self.pq.delMin()
+            self.visit(node)
+    
+    def visit(self, v):
+        self.marked[v] = True
+        for e in self.graph.adjTo(v):
+            w = e.other(v)
+            # v-w is ineligible
+            if self.marked[w]:
+                continue
+            if e.weight < self.distTo[w]:
+                # edge v-w is the best connection from tree to w
+                self.edgeTo[w] = v
+                self.distTo[w] = e.weight
+                index = self.pq.contains(w)
+                if index:
+                    self.pq.decreaseKey(index, e.weight)
+                else:
+                    self.pq.insert(w, e.weight)
+    
+    # Return all the edges on MST
+    def Edges(self):
+        edge_list = []
+        for v in self.edgeTo.keys():
+            w = self.edgeTo[v]
+            weight = self.distTo[v]
+            edge_list.append([v, w, weight])
+        return edge_list
+    
+    # Return the weight
+    def Weight(self):
+        weight_sum = 0
+        for v in self.graph.Vertices():
+            weight_sum += self.distTo[v]
+        return weight_sum
 
 def printAdjList(adj_list):
     adj_list_str = []
@@ -217,4 +260,9 @@ print(printAdjList(lazy_prim_mst.Edges()))
 print("Weight Sum: " + str(lazy_prim_mst.Weight()))
 print('\n')
 
-
+# Prim's MST (eager version)
+print("--- Prim's Minimum Spanning Tree (eager version) ---")
+prim_mst = PrimMST(ewg)
+print(prim_mst.Edges())
+print("Weight Sum: " + str(prim_mst.Weight()))
+print('\n')
